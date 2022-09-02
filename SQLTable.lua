@@ -5,10 +5,11 @@ Author:@remov_b4_result
 ]]
 
 local PluginTitle = 'SQLTable'
-local OutputFile = '/Usees/jenoki/' .. PluginTitle .. '.txt'
+local OutputFile = '/Users/jenoki/' .. PluginTitle .. '.txt'
 local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
 local LrProgress = import 'LrProgressScope'
+local LrErrors = import 'LrErrors'
 
 local metatypes = {
 	uuid = 'string,r',
@@ -33,7 +34,7 @@ function split(str, ts)
 	if ts == nil then return {} end
   
 	local t = {} ; 
-	i=1
+	i = 1
 	for s in string.gmatch(str, "([^"..ts.."]+)") do
 	  t[i] = s
 	  i = i + 1
@@ -64,13 +65,18 @@ function getMetadata(It,key)
 	end
 	return val
 end
-
 local CurrentCatalog = LrApplication.activeCatalog()
 -- open output SQL file
-fp = io.open(OutputFile,"w")
+local fp
+local message
+local code
+fp,message,code = io.open(OutputFile,"w")
+if fp == nil then 
+	LrErrors.throwUserError(message)
+end
 
 --Drop
-local SQL = 'DROP TABLE LIGHTROOM;'
+local SQL = 'DROP TABLE LIGHTROOM;\n'
 fp:write(SQL)
 
 --Build 'create table' statement 
@@ -92,7 +98,7 @@ for key,val in pairs(metatypes) do
 	end
 	SQL = SQL .. sqladd ..','
 end
-SQL = SQL .. ');'
+SQL = SQL .. ');\n'
 fp:write(SQL)
 
 -- Build 'insert' statement
@@ -123,7 +129,7 @@ LrTasks.startAsyncTask( function ()
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
 			end
 		end
-		SQL = SQLCOL .. SQLVAL .. ');'
+		SQL = SQLCOL .. SQLVAL .. ');\n'
 		fp:write(SQL)
 		ProgressBar:setPortionComplete(i,countPhotos)
 	end --end of for photos loop
