@@ -5,11 +5,20 @@ Author:@remov_b4_result
 ]]
 
 local PluginTitle = 'SQLTable'
-local OutputFile = '/Users/jenoki/' .. PluginTitle .. '.txt'
 local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
 local LrProgress = import 'LrProgressScope'
 local LrErrors = import 'LrErrors'
+local LrPathUtils = import 'LrPathUtils'
+local LrLogger = import 'LrLogger'
+local Logger = LrLogger(PluginTitle)
+Logger:enable('logfile')
+
+if WIN_ENV then
+	DELM = '¥'
+else
+	DELM = '/'
+end
 
 local metatypes = {
 	uuid = 'string,r',
@@ -67,10 +76,9 @@ function getMetadata(It,key)
 end
 local CurrentCatalog = LrApplication.activeCatalog()
 -- open output SQL file
-local fp
-local message
-local code
-fp,message,code = io.open(OutputFile,"w")
+local OutputFile = LrPathUtils.getStandardFilePath('home') .. DELM 
+OutputFile = OutputFile .. PluginTitle .. '.txt'
+fp = io.open(OutputFile,"w")
 if fp == nil then 
 	LrErrors.throwUserError(message)
 end
