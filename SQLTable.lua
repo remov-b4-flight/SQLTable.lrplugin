@@ -10,10 +10,11 @@ local LrTasks = import 'LrTasks'
 local LrProgress = import 'LrProgressScope'
 local LrErrors = import 'LrErrors'
 local LrPathUtils = import 'LrPathUtils'
-local LrLogger = import 'LrLogger'
-local Logger = LrLogger(PluginTitle)
-Logger:enable('logfile')
+--local LrLogger = import 'LrLogger'
+--local Logger = LrLogger(PluginTitle)
+--Logger:enable('logfile')
 
+-- Define path delimiter
 if WIN_ENV then
 	DELM = '¥'
 else
@@ -74,8 +75,10 @@ function getMetadata(It,key)
 	end
 	return val
 end
+
+-- Making up
 local CurrentCatalog = LrApplication.activeCatalog()
--- open output SQL file
+--Open output SQL file
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. DELM 
 OutputFile = OutputFile .. PluginTitle .. '.txt'
 fp = io.open(OutputFile,"w")
@@ -83,11 +86,11 @@ if fp == nil then
 	LrErrors.throwUserError(message)
 end
 
---Drop
+--Drop table
 local SQL = 'DROP TABLE LIGHTROOM;\n'
 fp:write(SQL)
 
---Build 'create table' statement 
+-- Build 'create table' statement 
 SQL = 'CREATE TABLE LIGHTROOM ('
 for key,val in pairs(metatypes) do
 	local meta = split(val,',')
@@ -117,7 +120,7 @@ for key,val in pairs(metatypes) do
 end
 SQLCOL = SQLCOL .. ') '
 
---Main part of this plugin.
+-- Main part of this plugin.
 LrTasks.startAsyncTask( function ()
 	local ProgressBar = LrProgress(
 		{title = 'Generating SQL..'}
