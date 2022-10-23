@@ -22,21 +22,20 @@ else
 end
 
 local metatypes = {
-	uuid = 'string,r',
 	folderName = 'string,f',
 	fileName = 'string,f',
-	rating = 'integer,r', 
+--	rating = 'integer,r', 
 	caption = 'string,f',
 	cameraModel = 'string,f',
 	lens = 'string,f',
-	subjectDistance = 'string,f',
-	dateTime = 'string,f',
-	aperture = 'string,f',
-	shutterSpeed = 'number,f',
-	exposureBias = 'string,f',
-	isoSpeedRating = 'integer,f',
+--	subjectDistance = 'string,f',
+	dateTime = 'datetime,f',
+--	aperture = 'string,f',
+--	shutterSpeed = 'number,f',
+--	exposureBias = 'string,f',
+--	isoSpeedRating = 'integer,f',
 	focalLength35mm = 'number,r',
-	flash = 'string,f',
+--	flash = 'string,f',
 }
 
 function split(str, ts)
@@ -80,45 +79,41 @@ end
 local CurrentCatalog = LrApplication.activeCatalog()
 --Open output SQL file
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. DELM 
-OutputFile = OutputFile .. PluginTitle .. '.txt'
+OutputFile = OutputFile .. PluginTitle .. '.sql'
 fp = io.open(OutputFile,"w")
 if fp == nil then 
 	LrErrors.throwUserError(message)
 end
 
---Drop table
-local SQL = 'DROP TABLE LIGHTROOM;\n'
+-- Drop table
+local SQL = 'drop table lightroom;\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
-SQL = 'CREATE TABLE LIGHTROOM ('
+local SQLCOL =  '('
 for key,val in pairs(metatypes) do
 	local meta = split(val,',')
 	local sqladd
 	if (meta[1] == 'string') then
-		sqladd = key .. ' CHAR(255)'
+		sqladd = key .. ' varchar(255)'
 	elseif (meta[1] == 'number') then
-		sqladd = key .. ' DECIMAL(8)'
+		sqladd = key .. ' decimal(8)'
 	elseif (meta[1] == 'integer') then
-		sqladd = key .. ' INT'
+		sqladd = key .. ' int'
 	elseif (meta[1] == 'boolean') then
-		sqladd = key .. ' BIT'
+		sqladd = key .. ' bit'
+	elseif (meta[1] == 'datetime') then
+		sqladd = 'daytime' .. ' datetime'
 	end
-	if (key == 'uuid') then
-		sqladd = sqladd .. ' PRIMARY KEY'
-	end
-	SQL = SQL .. sqladd ..','
+	SQLCOL = SQLCOL .. sqladd .. ','
 end
-SQL = SQL .. ');\n'
+local strlen = string.len(SQLCOL)
+SQLCOL = string.sub(SQLCOL,1,strlen - 1)
+local SQL = 'create table lightroom' .. SQLCOL .. ');\n'
 fp:write(SQL)
 
 -- Build 'insert' statement
-SQLCOL = 'INSERT INTO LIGHTROOM('
-for key,val in pairs(metatypes) do
-	local sqladd = key ..','
-	SQLCOL = SQLCOL .. sqladd
-end
-SQLCOL = SQLCOL .. ') '
+INSERT = 'insert into lightroom '
 
 -- Main part of this plugin.
 LrTasks.startAsyncTask( function ()
@@ -130,7 +125,7 @@ LrTasks.startAsyncTask( function ()
 	local countPhotos = #SelectedPhotos
 	--loops photos in selected
 	for i,PhotoIt in ipairs(SelectedPhotos) do
-		SQLVAL = 'VALUES('
+		SQLVAL = 'values('
 		for key,val in pairs(metatypes) do
 			local metadata = getMetadata(PhotoIt,key)
 			local meta = split(val,',')
@@ -140,7 +135,9 @@ LrTasks.startAsyncTask( function ()
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
 			end
 		end
-		SQL = SQLCOL .. SQLVAL .. ');\n'
+		local strlen = string.len(SQLVAL)
+		SQLVAL = string.sub(SQLVAL,1,strlen - 1)
+		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
 		ProgressBar:setPortionComplete(i,countPhotos)
 	end --end of for photos loop
