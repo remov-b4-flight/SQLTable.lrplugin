@@ -24,18 +24,18 @@ end
 local metatypes = {
 	folderName = 'string,f',
 	fileName = 'string,f',
---	rating = 'integer,r', 
+	rating = 'integer,r', 
 	caption = 'string,f',
 	cameraModel = 'string,f',
 	lens = 'string,f',
---	subjectDistance = 'string,f',
+	subjectDistance = 'string,f',
 	dateTime = 'datetime,f',
---	aperture = 'string,f',
---	shutterSpeed = 'number,f',
---	exposureBias = 'string,f',
---	isoSpeedRating = 'integer,f',
+	aperture = 'number,r',
+	shutterSpeed = 'string,f',
+	exposureBias = 'string,f',
+	isoSpeedRating = 'number,r',
 	focalLength35mm = 'number,r',
---	flash = 'string,f',
+	flash = 'string,f',
 }
 
 function split(str, ts)
@@ -69,14 +69,20 @@ function getMetadata(It,key)
 		val = It:getRawMetadata(key)
 	end
 
-	if (val == nil) then
+	if (val == nil or string.len(val) == 0) then
 		val = 'NULL'
 	end
 	return val
 end
 
+function chop(str)
+	local strlen = string.len(str)
+	return string.sub(str,1,strlen - 1)
+end
+
 -- Making up
 local CurrentCatalog = LrApplication.activeCatalog()
+local TABLE = 'photos'
 --Open output SQL file
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. DELM 
 OutputFile = OutputFile .. PluginTitle .. '.sql'
@@ -86,7 +92,8 @@ if fp == nil then
 end
 
 -- Drop table
-local SQL = 'drop table lightroom;\n'
+local SQL = 'use lightroom;\n'
+SQL = SQL .. 'drop table if exists ' .. TABLE .. ';\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
@@ -107,13 +114,12 @@ for key,val in pairs(metatypes) do
 	end
 	SQLCOL = SQLCOL .. sqladd .. ','
 end
-local strlen = string.len(SQLCOL)
-SQLCOL = string.sub(SQLCOL,1,strlen - 1)
-local SQL = 'create table lightroom' .. SQLCOL .. ');\n'
+SQLCOL = chop(SQLCOL)
+SQL = 'create table ' .. TABLE .. ' ' .. SQLCOL .. ');\n'
 fp:write(SQL)
 
 -- Build 'insert' statement
-INSERT = 'insert into lightroom '
+INSERT = 'insert into ' .. TABLE .. ' '
 
 -- Main part of this plugin.
 LrTasks.startAsyncTask( function ()
@@ -129,14 +135,13 @@ LrTasks.startAsyncTask( function ()
 		for key,val in pairs(metatypes) do
 			local metadata = getMetadata(PhotoIt,key)
 			local meta = split(val,',')
-			if (meta[1] == 'number' or meta[1] == 'integer' ) then
+			if (meta[1] == 'number' or meta[1] == 'integer' or metadata == 'NULL') then
 				SQLVAL = SQLVAL .. metadata .. ','
 			else
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
 			end
 		end
-		local strlen = string.len(SQLVAL)
-		SQLVAL = string.sub(SQLVAL,1,strlen - 1)
+		SQLVAL = chop(SQLVAL)
 		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
 		ProgressBar:setPortionComplete(i,countPhotos)
