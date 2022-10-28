@@ -16,26 +16,27 @@ local LrPathUtils = import 'LrPathUtils'
 
 -- Define path delimiter
 if WIN_ENV then
-	DELM = '¥'
+	PATHDELM = '¥'
 else
-	DELM = '/'
+	PATHDELM = '/'
 end
+DELM = ';'
 
 local metatypes = {
-	folderName = 'string,f',
-	fileName = 'string,f',
-	rating = 'integer,r', 
-	caption = 'string,f',
-	cameraModel = 'string,f',
-	lens = 'string,f',
-	subjectDistance = 'string,f',
-	dateTime = 'datetime,f',
-	aperture = 'number,r',
-	shutterSpeed = 'string,f',
-	exposureBias = 'string,f',
-	isoSpeedRating = 'number,r',
-	focalLength35mm = 'number,r',
-	flash = 'string,f',
+	dateTime = 'datetime' .. DELM .. 'f',
+	caption = 'varchar(64)' .. DELM .. 'f',
+	folderName = 'varchar(64)' .. DELM .. 'f',
+	fileName = 'varchar(64)' .. DELM .. 'f',
+	cameraModel = 'varchar(64)' .. DELM .. 'f',
+	lens = 'varchar(64)' .. DELM .. 'f',
+--	rating = 'int' .. DELM .. 'r', 
+--	subjectDistance = 'decimal(4,1)' .. DELM .. 'f',
+	aperture = 'decimal(2,1)' .. DELM .. 'r',
+	shutterSpeed = 'decimal(7,6)' .. DELM .. 'r',
+--	exposureBias = 'decimal(2,2)' .. DELM .. 'r',
+	isoSpeedRating = 'decimal(6)' .. DELM .. 'r',
+	focalLength35mm = 'decimal(4,1)' .. DELM .. 'r',
+--	flash = 'string' .. DELM .. 'f',
 }
 
 function split(str, ts)
@@ -61,7 +62,7 @@ end
 
 function getMetadata(It,key)
 	local t = getTable(key)
-	local meta = split(t,',')
+	local meta = split(t,DELM)
 	local val
 	if (meta[2] == 'f' or #meta == 1) then
 		val = It:getFormattedMetadata(key)
@@ -84,7 +85,7 @@ end
 local CurrentCatalog = LrApplication.activeCatalog()
 local TABLE = 'photos'
 --Open output SQL file
-local OutputFile = LrPathUtils.getStandardFilePath('home') .. DELM 
+local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM 
 OutputFile = OutputFile .. PluginTitle .. '.sql'
 fp = io.open(OutputFile,"w")
 if fp == nil then 
@@ -98,28 +99,24 @@ fp:write(SQL)
 
 -- Build 'create table' statement 
 local SQLCOL =  '('
+local SQLCOLTYP = '('
 for key,val in pairs(metatypes) do
-	local meta = split(val,',')
-	local sqladd
-	if (meta[1] == 'string') then
-		sqladd = key .. ' varchar(255)'
-	elseif (meta[1] == 'number') then
-		sqladd = key .. ' decimal(8)'
-	elseif (meta[1] == 'integer') then
-		sqladd = key .. ' int'
-	elseif (meta[1] == 'boolean') then
-		sqladd = key .. ' bit'
-	elseif (meta[1] == 'datetime') then
-		sqladd = 'daytime' .. ' datetime'
+	local meta = split(val,DELM)
+	if (key == 'fileName' or key == 'dateTime') then
+		key = '[' .. key .. ']'
+		col = key
 	end
-	SQLCOL = SQLCOL .. sqladd .. ','
+	SQLCOLTYP = SQLCOLTYP .. key .. ' ' .. meta[1] .. ','
+	SQLCOL = SQLCOL .. key .. ','
 end
+SQLCOLTYP = chop(SQLCOLTYP)
 SQLCOL = chop(SQLCOL)
-SQL = 'create table ' .. TABLE .. ' ' .. SQLCOL .. ');\n'
+SQLCOL = SQLCOL ..')'
+SQL = 'create table ' .. TABLE  .. SQLCOLTYP .. ');\n'
 fp:write(SQL)
 
 -- Build 'insert' statement
-INSERT = 'insert into ' .. TABLE .. ' '
+INSERT = 'insert into ' .. TABLE .. SQLCOL
 
 -- Main part of this plugin.
 LrTasks.startAsyncTask( function ()
@@ -131,14 +128,14 @@ LrTasks.startAsyncTask( function ()
 	local countPhotos = #SelectedPhotos
 	--loops photos in selected
 	for i,PhotoIt in ipairs(SelectedPhotos) do
-		SQLVAL = 'values('
+		SQLVAL = ' values('
 		for key,val in pairs(metatypes) do
 			local metadata = getMetadata(PhotoIt,key)
-			local meta = split(val,',')
-			if (meta[1] == 'number' or meta[1] == 'integer' or metadata == 'NULL') then
-				SQLVAL = SQLVAL .. metadata .. ','
-			else
+--			local meta = split(val,',')
+			if (string.find(val,'varchar') ~= nil or string.find(val,'datetime') ~= nil) then
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
+			else
+				SQLVAL = SQLVAL .. metadata .. ','
 			end
 		end
 		SQLVAL = chop(SQLVAL)
