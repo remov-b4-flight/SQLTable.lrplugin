@@ -10,6 +10,7 @@ local LrTasks = import 'LrTasks'
 local LrProgress = import 'LrProgressScope'
 local LrErrors = import 'LrErrors'
 local LrPathUtils = import 'LrPathUtils'
+local LrDialogs = import 'LrDialogs'
 --local LrLogger = import 'LrLogger'
 --local Logger = LrLogger(PluginTitle)
 --Logger:enable('logfile')
@@ -87,6 +88,7 @@ local TABLE = 'photos'
 --Open output SQL file
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM 
 OutputFile = OutputFile .. PluginTitle .. '.sql'
+--local OutPutFile = LrDialogs.runSavePanel{title = 'SQL output',reqiredFileTypes = 'sql',}
 fp = io.open(OutputFile,"w")
 if fp == nil then 
 	LrErrors.throwUserError(message)
@@ -131,7 +133,6 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = ' values('
 		for key,val in pairs(metatypes) do
 			local metadata = getMetadata(PhotoIt,key)
---			local meta = split(val,',')
 			if (string.find(val,'varchar') ~= nil or string.find(val,'datetime') ~= nil) then
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
 			else
@@ -141,6 +142,9 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = chop(SQLVAL)
 		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
+		if ((i % 1000) == 0 ) then
+			fp:write('GO\n')
+		end
 		ProgressBar:setPortionComplete(i,countPhotos)
 	end --end of for photos loop
 ProgressBar:done()
