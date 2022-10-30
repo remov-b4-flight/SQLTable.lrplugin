@@ -24,12 +24,12 @@ end
 DELM = ';'
 
 local metatypes = {
-	dateTime = 'datetime' .. DELM .. 'f',
-	caption = 'varchar(64)' .. DELM .. 'f',
-	folderName = 'varchar(64)' .. DELM .. 'f',
-	fileName = 'varchar(64)' .. DELM .. 'f',
-	cameraModel = 'varchar(64)' .. DELM .. 'f',
-	lens = 'varchar(64)' .. DELM .. 'f',
+	dateTime = 'timestamp' .. DELM .. 'f',
+	caption = 'nvarchar2(64)' .. DELM .. 'f',
+	folderName = 'nvarchar2(64)' .. DELM .. 'f',
+	fileName = 'nvarchar2(64)' .. DELM .. 'f',
+	cameraModel = 'nvarchar2(64)' .. DELM .. 'f',
+	lens = 'nvarchar2(64)' .. DELM .. 'f',
 --	rating = 'int' .. DELM .. 'r', 
 --	subjectDistance = 'decimal(4,1)' .. DELM .. 'f',
 	aperture = 'decimal(2,1)' .. DELM .. 'r',
@@ -95,8 +95,7 @@ if fp == nil then
 end
 
 -- Drop table
-local SQL = 'use lightroom;\n'
-SQL = SQL .. 'drop table if exists ' .. TABLE .. ';\n'
+local SQL = 'drop table ' .. TABLE .. ';\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
@@ -104,10 +103,6 @@ local SQLCOL =  '('
 local SQLCOLTYP = '('
 for key,val in pairs(metatypes) do
 	local meta = split(val,DELM)
-	if (key == 'fileName' or key == 'dateTime') then
-		key = '[' .. key .. ']'
-		col = key
-	end
 	SQLCOLTYP = SQLCOLTYP .. key .. ' ' .. meta[1] .. ','
 	SQLCOL = SQLCOL .. key .. ','
 end
@@ -133,7 +128,8 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = ' values('
 		for key,val in pairs(metatypes) do
 			local metadata = getMetadata(PhotoIt,key)
-			if (string.find(val,'varchar') ~= nil or string.find(val,'datetime') ~= nil) then
+			if ((string.find(val,'nvarchar2') ~= nil or string.find(val,'timestamp') ~= nil) 
+				and metadata ~= 'NULL') then
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
 			else
 				SQLVAL = SQLVAL .. metadata .. ','
@@ -142,9 +138,6 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = chop(SQLVAL)
 		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
-		if ((i % 1000) == 0 ) then
-			fp:write('GO\n')
-		end
 		ProgressBar:setPortionComplete(i,countPhotos)
 	end --end of for photos loop
 ProgressBar:done()
