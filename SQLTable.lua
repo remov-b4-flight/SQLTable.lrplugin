@@ -25,7 +25,7 @@ end
 DELM = ';'
 
 local metatypes = {
-	dateTime = 'timestamp' .. DELM .. 'f',
+	dateTime = 'datetime' .. DELM .. 'f',
 	caption = 'nvarchar2(64)' .. DELM .. 'f',
 	folderName = 'nvarchar2(64)' .. DELM .. 'f',
 	fileName = 'nvarchar2(64)' .. DELM .. 'f',
@@ -131,7 +131,7 @@ LrTasks.startAsyncTask( function ()
 			if ((string.find(val,'varchar') ~= nil or string.find(val,'datetime') ~= nil) and metadata ~= 'NULL') then
 				metadata = string.gsub(metadata,'\'','\'\'')
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
-			elseif (key == 'shutterSpeed') then
+			elseif (key == 'shutterSpeed' and metadata ~= 'NULL') then
 				SQLVAL = SQLVAL .. 'round(' .. metadata .. ',6),'
 			else
 				SQLVAL = SQLVAL .. metadata .. ','
