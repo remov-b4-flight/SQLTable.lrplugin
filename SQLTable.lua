@@ -1,7 +1,8 @@
 --[[
-SQLTable.lua
-SQLTable.lrplugin
-Author:@remov_b4_result
+@file SQLTable.lua
+@brief Main part of 'SQLTable.lrplugin'
+@note This plugin outputs file that SQL Server specified.
+@author @remov_b4_flight
 ]]
 
 local PluginTitle = 'SQLTable'
@@ -33,10 +34,10 @@ local metatypes = {
 --	rating = 'int' .. DELM .. 'r', 
 --	subjectDistance = 'decimal(4,1)' .. DELM .. 'f',
 	aperture = 'decimal(2,1)' .. DELM .. 'r',
-	shutterSpeed = 'decimal(7,6)' .. DELM .. 'r',
+	shutterSpeed = 'decimal(10,6)' .. DELM .. 'r',
 --	exposureBias = 'decimal(2,2)' .. DELM .. 'r',
 	isoSpeedRating = 'decimal(6)' .. DELM .. 'r',
-	focalLength35mm = 'decimal(4,1)' .. DELM .. 'r',
+	focalLength35mm = 'decimal(5,1)' .. DELM .. 'r',
 --	flash = 'string' .. DELM .. 'f',
 }
 
@@ -88,7 +89,6 @@ local TABLE = 'photos'
 --Open output SQL file
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM 
 OutputFile = OutputFile .. PluginTitle .. '.sql'
---local OutPutFile = LrDialogs.runSavePanel{title = 'SQL output',reqiredFileTypes = 'sql',}
 fp = io.open(OutputFile,"w")
 if fp == nil then 
 	LrErrors.throwUserError(message)
@@ -133,8 +133,11 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = ' values('
 		for key,val in pairs(metatypes) do
 			local metadata = getMetadata(PhotoIt,key)
-			if (string.find(val,'varchar') ~= nil or string.find(val,'datetime') ~= nil) then
+			if ((string.find(val,'varchar') ~= nil or string.find(val,'datetime') ~= nil) and metadata ~= 'NULL') then
+				metadata = string.gsub(metadata,'\'','\'\'')
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
+			elseif (key == 'shutterSpeed') then
+				SQLVAL = SQLVAL .. 'round(' .. metadata .. ',6),'
 			else
 				SQLVAL = SQLVAL .. metadata .. ','
 			end
@@ -143,7 +146,7 @@ LrTasks.startAsyncTask( function ()
 		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
 		if ((i % 1000) == 0 ) then
-			fp:write('GO\n')
+			fp:write('go\n')
 		end
 		ProgressBar:setPortionComplete(i,countPhotos)
 	end --end of for photos loop
