@@ -95,7 +95,8 @@ if fp == nil then
 end
 
 -- Drop table
-local SQL = 'drop table ' .. TABLE .. ' if exists;\n'
+local SQL = 'use lightroom;'
+SQL = SQL .. 'drop table ' .. TABLE .. ' if exists;\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
