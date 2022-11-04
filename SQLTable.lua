@@ -26,11 +26,11 @@ DELM = ';'
 
 local metatypes = {
 	dateTime = 'datetime' .. DELM .. 'f',
-	caption = 'nvarchar2(64)' .. DELM .. 'f',
-	folderName = 'nvarchar2(64)' .. DELM .. 'f',
-	fileName = 'nvarchar2(64)' .. DELM .. 'f',
-	cameraModel = 'nvarchar2(64)' .. DELM .. 'f',
-	lens = 'nvarchar2(64)' .. DELM .. 'f',
+	caption = 'nvarchar(64)' .. DELM .. 'f',
+	folderName = 'nvarchar(64)' .. DELM .. 'f',
+	fileName = 'nvarchar(64)' .. DELM .. 'f',
+	cameraModel = 'nvarchar(64)' .. DELM .. 'f',
+	lens = 'nvarchar(64)' .. DELM .. 'f',
 --	rating = 'int' .. DELM .. 'r', 
 --	subjectDistance = 'decimal(4,1)' .. DELM .. 'f',
 	aperture = 'decimal(2,1)' .. DELM .. 'r',
@@ -95,7 +95,7 @@ if fp == nil then
 end
 
 -- Drop table
-local SQL = 'drop table ' .. TABLE .. ';\n'
+local SQL = 'drop table ' .. TABLE .. ' if exists;\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
