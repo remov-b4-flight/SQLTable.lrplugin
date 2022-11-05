@@ -33,7 +33,7 @@ local metatypes = {
 	lens = 'nvarchar(64)' .. DELM .. 'f',
 --	rating = 'int' .. DELM .. 'r', 
 --	subjectDistance = 'decimal(4,1)' .. DELM .. 'f',
-	aperture = 'decimal(2,1)' .. DELM .. 'r',
+	aperture = 'decimal(3,1)' .. DELM .. 'r',
 	shutterSpeed = 'decimal(10,6)' .. DELM .. 'r',
 --	exposureBias = 'decimal(2,2)' .. DELM .. 'r',
 	isoSpeedRating = 'decimal(6)' .. DELM .. 'r',
@@ -95,8 +95,8 @@ if fp == nil then
 end
 
 -- Drop table
-local SQL = 'use lightroom;'
-SQL = SQL .. 'drop table ' .. TABLE .. ' if exists;\n'
+local SQL = 'use lightroom;\n'
+SQL = SQL .. 'drop table if exists ' .. TABLE ..';\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
@@ -104,6 +104,9 @@ local SQLCOL =  '('
 local SQLCOLTYP = '('
 for key,val in pairs(metatypes) do
 	local meta = split(val,DELM)
+	if (key == 'fileName' or key == 'dateTime') then
+		key = '[' .. key .. ']'
+	end
 	SQLCOLTYP = SQLCOLTYP .. key .. ' ' .. meta[1] .. ','
 	SQLCOL = SQLCOL .. key .. ','
 end
@@ -141,7 +144,7 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = chop(SQLVAL)
 		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
-		if ((i % 1000) == 0 ) then
+		if ((i % 15) == 0 ) then
 			fp:write('go\n')
 		end
 		ProgressBar:setPortionComplete(i,countPhotos)
