@@ -19,24 +19,6 @@ DELM = ';'
 FORMATTED = 1
 RAW = 2
 -- Define matadata specs what you want to export to SQL script.
-local metatypes = {
-	dateTime = 'datetime' .. DELM .. 'f',
-	caption = 'nvarchar(64)' .. DELM .. 'f',
-	folderName = 'nvarchar(64)' .. DELM .. 'f',
-	fileName = 'nvarchar(64)' .. DELM .. 'f',
-	cameraModel = 'nvarchar(64)' .. DELM .. 'f',
-	lens = 'nvarchar(64)' .. DELM .. 'f',
-	rating = 'decimal(1)' .. DELM .. 'r', 
-	subjectDistance = 'decimal(5,1)' .. DELM .. 'f',
-	aperture = 'decimal(3,1)' .. DELM .. 'r',
-	shutterSpeed = 'decimal(10,6)' .. DELM .. 'r',
-	exposureBias = 'decimal(4,2)' .. DELM .. 'r',
-	isoSpeedRating = 'decimal(6)' .. DELM .. 'r',
-	focalLength35mm = 'decimal(5,1)' .. DELM .. 'r',
-	flash = 'nvarchar(64)' .. DELM .. 'f',
-	fileSize = 'decimal(10)' .. DELM .. 'r',
-	collections = 'decimal(2)'
-}
 local metadefs = {
 	dateTime = {type = 'datetime', source = FORMATTED},
 	caption = {type = 'nvarchar(64)', source = FORMATTED},
@@ -45,7 +27,7 @@ local metadefs = {
 	cameraModel = {type = 'nvarchar(64)', source = FORMATTED},
 	lens = {type = 'nvarchar(64)', source = FORMATTED},
 	rating = {type = 'decimal(1)', source = RAW}, 
-	subjectDistance = {type = 'decimal(4,1)', source = FORMATTED},
+--	subjectDistance = {type = 'decimal(4,1)', source = FORMATTED},
 	aperture = {type = 'decimal(3,1)', source = RAW},
 	shutterSpeed = {type = 'decimal(10,6)', source = RAW},
 	exposureBias = {type = 'decimal(4,2)', source = RAW},
@@ -55,51 +37,12 @@ local metadefs = {
 	fileSize = {type = 'decimal(10)', source = RAW},
 	collections = {type = 'decimal(2)'},
 }
+
 -- Define path delimiter
 if WIN_ENV then
 	PATHDELM = '¥'
 else
 	PATHDELM = '/'
-end
-
-function split(str, ts)
-	-- 引数がないときは空tableを返す
-	if ts == nil then return {} end
-  
-	local t = {} ; 
-	i = 1
-	for s in string.gmatch(str, "([^"..ts.."]+)") do
-	  t[i] = s
-	  i = i + 1
-	end  
-	return t
-end
-
-function getTable(key)
-	for k,v in pairs(metatypes) do
-		if (k == key) then 
-			return v
-		end
-	end
-end	
-
-function getMetadata(It,key)
-	local t = getTable(key)
-	local meta = split(t,DELM)
-	local val
-	if (key == 'collections') then
-		local c = It:getContainedCollections()
-		val = #c
-	elseif (meta[2] == 'f' or #meta == 1) then
-		val = It:getFormattedMetadata(key)
-	elseif (meta[2] == 'r') then
-		val = It:getRawMetadata(key)
-	end
-
-	if (val == nil or string.len(val) == 0) then
-		val = 'NULL'
-	end
-	return val
 end
 
 function getMetadata2(It,key)
@@ -137,19 +80,18 @@ if fp == nil then
 end
 
 -- Drop table
-local SQL = 'use lightroom;\n'
-SQL = SQL .. 'drop table if exists ' .. TABLE ..';\n'
+local SQL = 'use lightroom ;\n'
+SQL = SQL .. 'drop table ' .. TABLE .. ' ;\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
 local SQLCOL =  '('
 local SQLCOLTYP = '('
-for key,val in pairs(metatypes) do
-	local meta = split(val,DELM)
+for key,val in pairs(metadefs) do
 	if (key == 'fileName' or key == 'dateTime') then
 		key = '[' .. key .. ']'
 	end
-	SQLCOLTYP = SQLCOLTYP .. key .. ' ' .. meta[1] .. ','
+	SQLCOLTYP = SQLCOLTYP .. key .. ' ' .. val.type .. ','
 	SQLCOL = SQLCOL .. key .. ','
 end
 SQLCOLTYP = chop(SQLCOLTYP)
@@ -175,9 +117,6 @@ LrTasks.startAsyncTask( function ()
 		for key,val in pairs(metadefs) do
 			local metadata = getMetadata2(PhotoIt,key)
 			if ((string.find(val.type,'varchar') ~= nil or string.find(val.type,'datetime') ~= nil) and metadata ~= 'NULL') then
---		for key,val in pairs(metatypes) do
---			local metadata = getMetadata(PhotoIt,key)
---			if ((string.find(val,'varchar') ~= nil or string.find(val,'datetime') ~= nil) and metadata ~= 'NULL') then
 				metadata = string.gsub(metadata,'\'','\'\'')
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
 			elseif (key == 'shutterSpeed' and metadata ~= 'NULL') then
