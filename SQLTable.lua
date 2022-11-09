@@ -80,15 +80,15 @@ if fp == nil then
 end
 
 -- Drop table
-local SQL = 'use lightroom ;\n'
-SQL = SQL .. 'drop table ' .. TABLE .. ' ;\n'
+local SQL = 'use lightroom;\n'
+SQL = SQL .. 'drop table ' .. TABLE .. ';\ngo;\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
 local SQLCOL =  '('
 local SQLCOLTYP = '('
 for key,val in pairs(metadefs) do
-	if (key == 'fileName' or key == 'dateTime') then
+	if (key == 'fileName' or key == 'dateTime' or key == 'fileSize') then
 		key = '[' .. key .. ']'
 	end
 	SQLCOLTYP = SQLCOLTYP .. key .. ' ' .. val.type .. ','
@@ -130,8 +130,8 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = chop(SQLVAL)
 		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
-		if ((i % 15) == 0 ) then
-			fp:write('go\n')
+		if ((i % 50) == 0 ) then
+			fp:write('go;\n')
 		end
 		ProgressBar:setPortionComplete(i,countPhotos)
 	end --end of for photos loop
