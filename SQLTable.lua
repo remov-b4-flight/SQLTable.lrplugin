@@ -18,6 +18,7 @@ local LrDialogs = import 'LrDialogs'
 DELM = ';'
 FORMATTED = 1
 RAW = 2
+VIRTUAL = 3
 -- Define matadata specs what you want to export to SQL script.
 local metadefs = {
 	dateTime = {type = 'datetime', source = FORMATTED},
@@ -33,9 +34,11 @@ local metadefs = {
 	exposureBias = {type = 'decimal(4,2)', source = RAW},
 	isoSpeedRating = {type = 'decimal(6)', source = RAW},
 	focalLength35mm = {type = 'decimal(5,1)', source = RAW},
-	flash = {type = 'nvarchar(64)', source = FORMATTED},
+	flash = {type = 'nvarchar(32)', source = FORMATTED},
 	fileSize = {type = 'decimal(10)', source = RAW},
-	collections = {type = 'decimal(2)'},
+	uuid = {type = 'varchar(64)', source = RAW},
+	collections = {type = 'decimal(2)', source = VIRTUAL},
+	collectionset = {type = 'nvarchar(64)', source = VIRTUAL},
 }
 
 -- Define path delimiter
@@ -48,9 +51,17 @@ end
 function getMetadata2(It,key)
 	local meta = metadefs[key].source
 	local val
-	if (key == 'collections') then
-		local c = It:getContainedCollections()
-		val = #c
+	if (meta == VIRTUAL) then
+		if (key == 'collections') then
+			local c = It:getContainedCollections()
+			val = #c
+		elseif(key == 'collectionset') then
+			local c = It:getContainedCollections()
+			if (#c == 1) then
+				local parent = c[1]:getParent()
+				val = parent:getName()
+			end
+		end
 	elseif (meta == FORMATTED) then
 		val = It:getFormattedMetadata(key)
 	elseif (meta == RAW) then
@@ -81,7 +92,7 @@ end
 
 -- Drop table
 local SQL = 'use lightroom;\n'
-SQL = SQL .. 'drop table ' .. TABLE .. ';\ngo;\n'
+SQL = SQL .. 'drop table ' .. TABLE .. ';\ngo\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
@@ -98,6 +109,8 @@ SQLCOLTYP = chop(SQLCOLTYP)
 SQLCOL = chop(SQLCOL)
 SQLCOL = SQLCOL ..')'
 SQL = 'create table ' .. TABLE  .. SQLCOLTYP .. ');\n'
+fp:write(SQL)
+SQL = 'create index cap on ' .. TABLE .. "(caption);\n"
 fp:write(SQL)
 
 -- Build 'insert' statement
@@ -130,8 +143,8 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = chop(SQLVAL)
 		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
-		if ((i % 50) == 0 ) then
-			fp:write('go;\n')
+		if ((i % 75) == 0 ) then
+			fp:write('go\n')
 		end
 		ProgressBar:setPortionComplete(i,countPhotos)
 	end --end of for photos loop
