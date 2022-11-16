@@ -15,10 +15,13 @@ local LrDialogs = import 'LrDialogs'
 --local LrLogger = import 'LrLogger'
 --local Logger = LrLogger(PluginTitle)
 --Logger:enable('logfile')
+
+-- Constants
 DELM = ';'
 FORMATTED = 1
 RAW = 2
 VIRTUAL = 3
+
 -- Define matadata specs what you want to export to SQL script.
 local metadefs = {
 	dateTime = {type = 'datetime', source = FORMATTED},
@@ -48,7 +51,7 @@ else
 	PATHDELM = '/'
 end
 
-function getMetadata2(It,key)
+function getMetadata(It,key)
 	local meta = metadefs[key].source
 	local val
 	if (meta == VIRTUAL) then
@@ -59,7 +62,9 @@ function getMetadata2(It,key)
 			local c = It:getContainedCollections()
 			if (#c == 1) then
 				local parent = c[1]:getParent()
-				val = parent:getName()
+				if (parent ~= nil) then 
+					val = parent:getName() 
+				end
 			end
 		end
 	elseif (meta == FORMATTED) then
@@ -82,9 +87,9 @@ end
 -- Making up
 local CurrentCatalog = LrApplication.activeCatalog()
 local TABLE = 'photos'
---Open output SQL file
+-- Open output SQL file
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM 
-OutputFile = OutputFile .. PluginTitle .. '.sql'
+OutputFile = OutputFile .. PluginTitle .. '_' ..TABLE .. '.sql'
 fp = io.open(OutputFile,"w")
 if fp == nil then 
 	LrErrors.throwUserError(message)
@@ -128,7 +133,7 @@ LrTasks.startAsyncTask( function ()
 	for i,PhotoIt in ipairs(SelectedPhotos) do
 		SQLVAL = ' values('
 		for key,val in pairs(metadefs) do
-			local metadata = getMetadata2(PhotoIt,key)
+			local metadata = getMetadata(PhotoIt,key)
 			if ((string.find(val.type,'varchar') ~= nil or string.find(val.type,'datetime') ~= nil) and metadata ~= 'NULL') then
 				metadata = string.gsub(metadata,'\'','\'\'')
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
