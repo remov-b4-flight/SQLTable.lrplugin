@@ -1,7 +1,7 @@
 --[[
-Info.lua
-SQLTable.lrplugin
-Author:@remov_b4_result
+@file Info.lua
+@brief Plug-in definition of 'SQLTable.lrplugin'
+@Author @remov_b4_flight
 ]]
 
 return {
@@ -11,10 +11,10 @@ return {
 	LrToolkitIdentifier = 'nu.mine.ruffles.sqltable',
 	LrPluginName = 'SQL Table',
 	LrPluginInfoUrl='https://twitter.com/remov_b4_flight',
-	LrLibraryMenuItems = { 
+	LrExportMenuItems = { 
 		{title = 'SQLTable',
 		file = 'SQLTable.lua',
-		enabledWhen = 'photosAvailable',},
+		enabledWhen = 'photosSelected',},
 	},
 	VERSION = { major=0, minor=0, revision=1, build=0, },
 
