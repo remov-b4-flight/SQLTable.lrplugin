@@ -22,6 +22,9 @@ FORMATTED = 1
 RAW = 2
 VIRTUAL = 3
 
+-- Start of customizable part.
+-- Define table name of SQL
+local TABLE = 'photos'
 -- Define matadata specs what you want to export to SQL script.
 local metadefs = {
 	dateTime = {type = 'datetime', source = FORMATTED},
@@ -41,8 +44,10 @@ local metadefs = {
 	fileSize = {type = 'decimal(10)', source = RAW},
 	uuid = {type = 'varchar(64)', source = RAW},
 	collections = {type = 'decimal(2)', source = VIRTUAL},
-	collectionset = {type = 'nvarchar(64)', source = VIRTUAL},
+	collectionSet = {type = 'nvarchar(64)', source = VIRTUAL},
+	collectionName = {type = 'nvarchar(64)', source = VIRTUAL},
 }
+-- END of cutomizable part
 
 -- Define path delimiter
 if WIN_ENV then
@@ -57,14 +62,21 @@ function getMetadata(It,key)
 	if (meta == VIRTUAL) then
 		if (key == 'collections') then
 			local c = It:getContainedCollections()
-			val = #c
-		elseif(key == 'collectionset') then
+			if (c ~= nil) then
+				val = #c
+			end
+		elseif(key == 'collectionSet') then
 			local c = It:getContainedCollections()
 			if (#c == 1) then
 				local parent = c[1]:getParent()
 				if (parent ~= nil) then 
 					val = parent:getName() 
 				end
+			end
+		elseif(key == 'collectionName') then
+			local c = It:getContainedCollections()
+			if (#c == 1) then
+				val = c[1]:getName()
 			end
 		end
 	elseif (meta == FORMATTED) then
@@ -84,12 +96,13 @@ function chop(str)
 	return string.sub(str,1,strlen - 1)
 end
 
+-- Start of Main part
 -- Making up
 local CurrentCatalog = LrApplication.activeCatalog()
-local TABLE = 'photos'
 -- Open output SQL file
+local FileBaseName = PluginTitle .. '_' ..TABLE .. '.sql'
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM 
-OutputFile = OutputFile .. PluginTitle .. '_' ..TABLE .. '.sql'
+OutputFile = OutputFile .. FileBaseName
 fp = io.open(OutputFile,"w")
 if fp == nil then 
 	LrErrors.throwUserError(message)
@@ -97,7 +110,8 @@ end
 
 -- Drop table
 local SQL = 'use lightroom;\n'
-SQL = SQL .. 'drop table ' .. TABLE .. ';\ngo\n'
+--SQL = SQL .. 'drop table ' .. TABLE .. ';\ngo\n'
+SQL = SQL .. 'truncate table ' .. TABLE .. ';\ngo\n'
 fp:write(SQL)
 
 -- Build 'create table' statement 
@@ -115,6 +129,7 @@ SQLCOL = chop(SQLCOL)
 SQLCOL = SQLCOL ..')'
 SQL = 'create table ' .. TABLE  .. SQLCOLTYP .. ');\n'
 fp:write(SQL)
+-- create index statement
 SQL = 'create index cap on ' .. TABLE .. "(caption);\n"
 fp:write(SQL)
 
@@ -124,7 +139,7 @@ INSERT = 'insert into ' .. TABLE .. SQLCOL
 -- Main part of this plugin.
 LrTasks.startAsyncTask( function ()
 	local ProgressBar = LrProgress(
-		{title = 'Generating SQL..'}
+		{title = 'making ' .. FileBaseName }
 	)
 
 	local SelectedPhotos = CurrentCatalog:getTargetPhotos()
@@ -134,7 +149,9 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = ' values('
 		for key,val in pairs(metadefs) do
 			local metadata = getMetadata(PhotoIt,key)
-			if ((string.find(val.type,'varchar') ~= nil or string.find(val.type,'datetime') ~= nil) and metadata ~= 'NULL') then
+			if ((string.find(val.type,'varchar') ~= nil or string.find(val.type,'datetime') ~= nil) 
+				and metadata ~= 'NULL') then
+
 				metadata = string.gsub(metadata,'\'','\'\'')
 				SQLVAL = SQLVAL .. '\'' .. metadata .. '\','
 			elseif (key == 'shutterSpeed' and metadata ~= 'NULL') then
@@ -148,7 +165,7 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = chop(SQLVAL)
 		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
-		if ((i % 75) == 0 ) then
+		if ((i % 80) == 0 ) then
 			fp:write('go\n')
 		end
 		ProgressBar:setPortionComplete(i,countPhotos)

@@ -1,7 +1,7 @@
 # SQLTable.lrplugin
 ## What is this?
 Lightroom plugin that export metadata as SQL script.  
-(specified SQL Server)
+(specified Microsoft SQL Server)
 ## Install
 It's standard Lightroom plugin Install.
 ## Usage
