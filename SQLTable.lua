@@ -47,6 +47,8 @@ local metadefs = {
 	collectionSet = {type = 'nvarchar(64)', source = VIRTUAL},
 	collectionName = {type = 'nvarchar(64)', source = VIRTUAL},
 }
+-- Define re-create or truncate table
+local CREATE = false
 -- END of cutomizable part
 
 -- Define path delimiter
@@ -99,7 +101,7 @@ end
 -- Start of Main part
 -- Making up
 local CurrentCatalog = LrApplication.activeCatalog()
--- Open output SQL file
+-- Open output SQL script file
 local FileBaseName = PluginTitle .. '_' ..TABLE .. '.sql'
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM 
 OutputFile = OutputFile .. FileBaseName
@@ -110,11 +112,14 @@ end
 
 -- Drop table
 local SQL = 'use lightroom;\n'
---SQL = SQL .. 'drop table ' .. TABLE .. ';\ngo\n'
-SQL = SQL .. 'truncate table ' .. TABLE .. ';\ngo\n'
+if (CREATE == true) then
+	SQL = SQL .. 'drop table ' .. TABLE .. ';\ngo\n'
+else
+	SQL = SQL .. 'truncate table ' .. TABLE .. ';\ngo\n'
+end
 fp:write(SQL)
 
--- Build 'create table' statement 
+-- Build column list 
 local SQLCOL =  '('
 local SQLCOLTYP = '('
 for key,val in pairs(metadefs) do
@@ -127,11 +132,15 @@ end
 SQLCOLTYP = chop(SQLCOLTYP)
 SQLCOL = chop(SQLCOL)
 SQLCOL = SQLCOL ..')'
-SQL = 'create table ' .. TABLE  .. SQLCOLTYP .. ');\n'
-fp:write(SQL)
--- create index statement
-SQL = 'create index cap on ' .. TABLE .. "(caption);\n"
-fp:write(SQL)
+
+if (CREATE == true) then
+	-- create table statement
+	SQL = 'create table ' .. TABLE  .. SQLCOLTYP .. ');\n'
+	fp:write(SQL)
+	-- create index statement
+	SQL = 'create index cap on ' .. TABLE .. "(caption);\n"
+	fp:write(SQL)
+end
 
 -- Build 'insert' statement
 INSERT = 'insert into ' .. TABLE .. SQLCOL
@@ -139,7 +148,7 @@ INSERT = 'insert into ' .. TABLE .. SQLCOL
 -- Main part of this plugin.
 LrTasks.startAsyncTask( function ()
 	local ProgressBar = LrProgress(
-		{title = 'making ' .. FileBaseName }
+		{title = 'making "' .. FileBaseName ..'"' }
 	)
 
 	local SelectedPhotos = CurrentCatalog:getTargetPhotos()
@@ -165,7 +174,7 @@ LrTasks.startAsyncTask( function ()
 		SQLVAL = chop(SQLVAL)
 		SQL = INSERT .. SQLVAL .. ');\n'
 		fp:write(SQL)
-		if ((i % 80) == 0 ) then
+		if ((i % 90) == 0 ) then
 			fp:write('go\n')
 		end
 		ProgressBar:setPortionComplete(i,countPhotos)
