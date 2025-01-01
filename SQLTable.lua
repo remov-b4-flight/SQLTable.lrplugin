@@ -31,6 +31,7 @@ local metadefs = {
 	caption = {type = 'nvarchar(64)', source = FORMATTED},
 	folderName = {type = 'nvarchar(64)', source = FORMATTED},
 	fileName = {type = 'nvarchar(64)', source = FORMATTED},
+	fileType = {type = 'nvarchar(32)', source = FORMATTED},
 	cameraModel = {type = 'nvarchar(64)', source = FORMATTED},
 	lens = {type = 'nvarchar(64)', source = FORMATTED},
 	rating = {type = 'decimal(1)', source = RAW}, 
@@ -140,6 +141,8 @@ if (CREATE == true) then
 	-- create index statement
 	SQL = 'create index cap on ' .. TABLE .. "(caption);\n"
 	fp:write(SQL)
+else
+	SQL = 'truncate table ' .. TABLE .. ';\n'
 end
 
 -- Build 'insert' statement
