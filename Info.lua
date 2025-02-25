@@ -8,7 +8,7 @@ return {
 
 	LrSdkVersion = 6.0,
 
-	LrToolkitIdentifier = 'nu.mine.ruffles.sqltable',
+	LrToolkitIdentifier = 'cx.ath.remov-b4-flight.sqltable',
 	LrPluginName = 'SQL Table',
 	LrPluginInfoUrl='https://twitter.com/remov_b4_flight',
 	LrExportMenuItems = { 
