@@ -158,6 +158,9 @@ LrTasks.startAsyncTask( function ()
 	local countPhotos = #SelectedPhotos
 	--loops photos in selected
 	for i,PhotoIt in ipairs(SelectedPhotos) do
+		if(ProgressBar:isCanceled()) then
+			break
+		end
 		SQLVAL = ' values('
 		for key,val in pairs(metadefs) do
 			local metadata = getMetadata(PhotoIt,key)
