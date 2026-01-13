@@ -5,15 +5,15 @@
 @author @remov_b4_flight
 ]]
 
-local PluginTitle = 'SQLTable'
 local LrApplication = import 'LrApplication'
 local LrTasks = import 'LrTasks'
 local LrProgress = import 'LrProgressScope'
 local LrErrors = import 'LrErrors'
 local LrPathUtils = import 'LrPathUtils'
 local LrDialogs = import 'LrDialogs'
+local info = require 'Info'
 --local LrLogger = import 'LrLogger'
---local Logger = LrLogger(PluginTitle)
+--local Logger = LrLogger(Info.LrPluginName)
 --Logger:enable('logfile')
 
 -- Constants
@@ -103,7 +103,7 @@ end
 -- Making up
 local CurrentCatalog = LrApplication.activeCatalog()
 -- Open output SQL script file
-local FileBaseName = PluginTitle .. '_' ..TABLE .. '.sql'
+local FileBaseName = Info.LrPluginName .. '_' ..TABLE .. '.sql'
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM 
 OutputFile = OutputFile .. FileBaseName
 fp = io.open(OutputFile,"w")
