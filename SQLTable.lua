@@ -124,11 +124,13 @@ fp:write(SQL)
 local SQLCOL =  '('
 local SQLCOLTYP = '('
 for key,val in pairs(metadefs) do
-	if (key == 'fileName' or key == 'dateTime' or key == 'fileSize') then
-		key = '[' .. key .. ']'
+	if (val ~= nil) then
+		if (key == 'fileName' or key == 'dateTime' or key == 'fileSize') then
+			key = '[' .. key .. ']'
+		end
+		SQLCOLTYP = SQLCOLTYP .. key .. ' ' .. val.type .. ','
+		SQLCOL = SQLCOL .. key .. ','
 	end
-	SQLCOLTYP = SQLCOLTYP .. key .. ' ' .. val.type .. ','
-	SQLCOL = SQLCOL .. key .. ','
 end
 SQLCOLTYP = chop(SQLCOLTYP)
 SQLCOL = chop(SQLCOL)
