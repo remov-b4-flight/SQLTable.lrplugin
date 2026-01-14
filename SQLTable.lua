@@ -11,7 +11,7 @@ local LrProgress = import 'LrProgressScope'
 local LrErrors = import 'LrErrors'
 local LrPathUtils = import 'LrPathUtils'
 local LrDialogs = import 'LrDialogs'
-local info = require 'Info'
+local Info = require 'Info'
 --local LrLogger = import 'LrLogger'
 --local Logger = LrLogger(Info.LrPluginName)
 --Logger:enable('logfile')
@@ -103,10 +103,10 @@ end
 -- Making up
 local CurrentCatalog = LrApplication.activeCatalog()
 -- Open output SQL script file
-local FileBaseName = Info.LrPluginName .. '_' ..TABLE .. '.sql'
+local FileBaseName = Info.LrPluginName .. '_' .. TABLE .. '.sql'
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM 
 OutputFile = OutputFile .. FileBaseName
-fp = io.open(OutputFile,"w")
+local fp = io.open(OutputFile,"w")
 if fp == nil then 
 	LrErrors.throwUserError(message)
 end
