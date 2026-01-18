@@ -59,7 +59,7 @@ else
 	PATHDELM = '/'
 end
 
-function getMetadata(It,key)
+function GetMetadata(It,key)
 	local meta = metadefs[key].source
 	local val
 	if (meta == VIRTUAL) then
@@ -94,7 +94,7 @@ function getMetadata(It,key)
 	return val
 end
 
-function chop(str)
+function Chop(str)
 	local strlen = string.len(str)
 	return string.sub(str,1,strlen - 1)
 end
@@ -106,8 +106,8 @@ local CurrentCatalog = LrApplication.activeCatalog()
 local FileBaseName = Info.LrPluginName .. '_' .. TABLE .. '.sql'
 local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM 
 OutputFile = OutputFile .. FileBaseName
-local fp = io.open(OutputFile,"w")
-if fp == nil then 
+FOUT = io.open(OutputFile,"w")
+if FOUT == nil then 
 	LrErrors.throwUserError('Cannot open file "' .. OutputFile .. '" for writing.')
 end
 
@@ -118,7 +118,7 @@ if (CREATE == true) then
 else
 	SQL = SQL .. 'truncate table ' .. TABLE .. ';\ngo\n'
 end
-fp:write(SQL)
+FOUT:write(SQL)
 
 -- Build column list 
 local SQLCOL =  '('
@@ -132,17 +132,17 @@ for key,val in pairs(metadefs) do
 		SQLCOL = SQLCOL .. key .. ','
 	end
 end
-SQLCOLTYP = chop(SQLCOLTYP)
-SQLCOL = chop(SQLCOL)
+SQLCOLTYP = Chop(SQLCOLTYP)
+SQLCOL = Chop(SQLCOL)
 SQLCOL = SQLCOL ..')'
 
 if (CREATE == true) then
 	-- create table statement
 	SQL = 'create table ' .. TABLE  .. SQLCOLTYP .. ');\n'
-	fp:write(SQL)
+	FOUT:write(SQL)
 	-- create index statement
 	SQL = 'create index cap on ' .. TABLE .. "(caption);\n"
-	fp:write(SQL)
+	FOUT:write(SQL)
 else
 	SQL = 'truncate table ' .. TABLE .. ';\n'
 end
@@ -165,7 +165,7 @@ LrTasks.startAsyncTask( function ()
 		end
 		SQLVAL = ' values('
 		for key,val in pairs(metadefs) do
-			local metadata = getMetadata(PhotoIt,key)
+			local metadata = GetMetadata(PhotoIt,key)
 			if ((string.find(val.type,'varchar') ~= nil or string.find(val.type,'datetime') ~= nil) 
 				and metadata ~= 'NULL') then
 
@@ -179,15 +179,15 @@ LrTasks.startAsyncTask( function ()
 				SQLVAL = SQLVAL .. metadata .. ','
 			end
 		end
-		SQLVAL = chop(SQLVAL)
+		SQLVAL = Chop(SQLVAL)
 		SQL = INSERT .. SQLVAL .. ');\n'
-		fp:write(SQL)
+		FOUT:write(SQL)
 		if ((i % 90) == 0 ) then
-			fp:write('go\n')
+			FOUT:write('go\n')
 		end
 		ProgressBar:setPortionComplete(i,countPhotos)
 	end --end of for photos loop
 ProgressBar:done()
-fp:close()
+FOUT:close()
 end ) --end of startAsyncTask function()
 return
