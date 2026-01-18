@@ -108,7 +108,7 @@ local OutputFile = LrPathUtils.getStandardFilePath('home') .. PATHDELM
 OutputFile = OutputFile .. FileBaseName
 local fp = io.open(OutputFile,"w")
 if fp == nil then 
-	LrErrors.throwUserError(message)
+	LrErrors.throwUserError('Cannot open file "' .. OutputFile .. '" for writing.')
 end
 
 -- Drop table
