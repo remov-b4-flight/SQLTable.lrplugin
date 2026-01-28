@@ -16,6 +16,6 @@ return {
 		file = 'SQLTable.lua',
 		enabledWhen = 'photosSelected',},
 	},
-	VERSION = { major=0, minor=0, revision=4, build=4, },
+	VERSION = { major=0, minor=0, revision=4, build=5, },
 
 }
