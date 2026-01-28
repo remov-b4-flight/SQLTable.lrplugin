@@ -10,7 +10,7 @@ return {
 
 	LrToolkitIdentifier = 'cx.ath.remov-b4-flight.sqltable',
 	LrPluginName = 'SQLTable',
-	LrPluginInfoUrl='https://twitter.com/remov_b4_flight',
+	LrPluginInfoUrl='https://github.com/remov-b4-flight/SQLTable.lrplugin',
 	LrExportMenuItems = { 
 		{title = 'Export SQL Table',
 		file = 'SQLTable.lua',
