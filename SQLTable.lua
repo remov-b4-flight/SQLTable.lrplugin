@@ -158,6 +158,9 @@ LrTasks.startAsyncTask( function ()
 
 	local SelectedPhotos = CurrentCatalog:getTargetPhotos()
 	local countPhotos = #SelectedPhotos
+	if (countPhotos == 1) then
+		SelectedPhotos = CurrentCatalog:getAllPhotos()
+	end
 	--loops photos in selected
 	for i,PhotoIt in ipairs(SelectedPhotos) do
 		if(ProgressBar:isCanceled()) then
