@@ -12,6 +12,8 @@ local LrErrors = import 'LrErrors'
 local LrPathUtils = import 'LrPathUtils'
 local LrDialogs = import 'LrDialogs'
 local Info = require 'Info'
+local prefs = import 'LrPrefs'.prefsForPlugin()
+
 --local LrLogger = import 'LrLogger'
 --local Logger = LrLogger(Info.LrPluginName)
 --Logger:enable('logfile')
@@ -35,7 +37,7 @@ local metadefs = {
 	cameraModel = {type = 'nvarchar(64)', source = FORMATTED},
 	lens = {type = 'nvarchar(64)', source = FORMATTED},
 	rating = {type = 'decimal(1)', source = RAW}, 
---	subjectDistance = {type = 'decimal(4,1)', source = FORMATTED},
+	subjectDistance = {type = 'decimal(4,1)', source = FORMATTED},
 	aperture = {type = 'decimal(3,1)', source = RAW},
 	shutterSpeed = {type = 'decimal(10,6)', source = RAW},
 	exposureBias = {type = 'decimal(4,2)', source = RAW},
@@ -49,7 +51,7 @@ local metadefs = {
 	collectionName = {type = 'nvarchar(64)', source = VIRTUAL},
 }
 -- Define re-create or truncate table
-local CREATE = false
+local CREATE = prefs.isCreate
 -- END of cutomizable part
 
 -- Define path delimiter

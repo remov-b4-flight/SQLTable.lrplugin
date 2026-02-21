@@ -16,6 +16,9 @@ return {
 		file = 'SQLTable.lua',
 		enabledWhen = 'anythingSelected',},
 	},
-	VERSION = { major=0, minor=1, revision=0, build=5, },
+	LrPluginInfoProvider = 'PluginInfo.lua',
+	LrInitPlugin = 'PluginInit.lua',
+
+	VERSION = { major=0, minor=2, revision=0, build=6, },
 
 }
