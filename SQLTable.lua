@@ -1,7 +1,7 @@
 --[[
 @file SQLTable.lua
 @brief Main part of 'SQLTable.lrplugin'
-@note This plugin outputs file that SQL Server specified.
+@note This plugin outputs file that Microsoft SQL Server specified.
 @author @remov_b4_flight
 ]]
 
@@ -26,7 +26,7 @@ VIRTUAL = 3
 
 -- Start of customizable part.
 -- Define table name of SQL
-local TABLE = 'photos'
+local TABLE = prefs.tableName
 -- Define matadata specs what you want to export to SQL script.
 local metadefs = {
 	dateTime = {type = 'datetime', source = FORMATTED},
@@ -162,6 +162,7 @@ LrTasks.startAsyncTask( function ()
 	local countPhotos = #SelectedPhotos
 	if (countPhotos == 1) then
 		SelectedPhotos = CurrentCatalog:getAllPhotos()
+		countPhotos = #SelectedPhotos
 	end
 	--loops photos in selected
 	for i,PhotoIt in ipairs(SelectedPhotos) do

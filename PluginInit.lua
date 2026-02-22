@@ -8,3 +8,8 @@ local prefs = import 'LrPrefs'.prefsForPlugin()
 if prefs.isCreate == nil then
 	prefs.isCreate = true
 end
+
+if prefs.tableName == nil then
+	prefs.tableName = 'photos'
+end
+

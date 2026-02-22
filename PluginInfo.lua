@@ -15,10 +15,12 @@ local CurrentCatalog = LrApplication.activeCatalog()
 
 function PluginInfo.startDialog( propertyTable )
 	propertyTable.isCreate = prefs.isCreate
+	propertyTable.tableName = prefs.tableName
 end
 
 function PluginInfo.endDialog( propertyTable )
 		prefs.isCreate = propertyTable.isCreate
+		prefs.tableName = propertyTable.tableName
 end
 
 function PluginInfo.sectionsForTopOfDialog( viewFactory, propertyTable )
@@ -28,7 +30,12 @@ function PluginInfo.sectionsForTopOfDialog( viewFactory, propertyTable )
 			synopsis = LOC '$$$/sqltable/description=Create SQL Table from Lightroom Metadata.',
 			bind_to_object = propertyTable,
 			viewFactory:row {
+				viewFactory:static_text {width_in_chars = 7, title = LOC '$$$/sqltable/tablename=Table Name',},
+				viewFactory:edit_field { value = bind 'tableName',},
+			},
+			viewFactory:row {
 				viewFactory:checkbox {title = LOC '$$$/sqltable/create=Create Table', value = bind 'isCreate',},
+
 			},
 		},
 	}
