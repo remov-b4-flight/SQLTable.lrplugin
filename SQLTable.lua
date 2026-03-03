@@ -113,15 +113,6 @@ if FOUT == nil then
 	LrErrors.throwUserError('Cannot open file "' .. OutputFile .. '" for writing.')
 end
 
--- Drop table
-local SQL = 'use lightroom;\n'
-if (CREATE == true) then
-	SQL = SQL .. 'drop table ' .. TABLE .. ';\ngo\n'
-else
-	SQL = SQL .. 'truncate table ' .. TABLE .. ';\ngo\n'
-end
-FOUT:write(SQL)
-
 -- Build column list 
 local SQLCOL =  '('
 local SQLCOLTYP = '('
@@ -138,16 +129,18 @@ SQLCOLTYP = Chop(SQLCOLTYP)
 SQLCOL = Chop(SQLCOL)
 SQLCOL = SQLCOL ..')'
 
+local SQL = 'use lightroom;\n'
 if (CREATE == true) then
+	-- Drop table
+	SQL = SQL .. 'drop table ' .. TABLE .. ';\ngo\n'
 	-- create table statement
-	SQL = 'create table ' .. TABLE  .. SQLCOLTYP .. ');\n'
-	FOUT:write(SQL)
+	SQL = SQL .. 'create table ' .. TABLE  .. SQLCOLTYP .. ');\n'
 	-- create index statement
-	SQL = 'create index cap on ' .. TABLE .. "(caption);\n"
-	FOUT:write(SQL)
+	SQL = SQL .. 'create index cap on ' .. TABLE .. "(caption);\n"
 else
-	SQL = 'truncate table ' .. TABLE .. ';\n'
+	SQL = SQL .. 'truncate table ' .. TABLE .. ';\ngo\n'
 end
+FOUT:write(SQL)
 
 -- Build 'insert' statement
 INSERT = 'insert into ' .. TABLE .. SQLCOL
